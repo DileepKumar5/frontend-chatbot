@@ -1,5 +1,7 @@
+// app/layout.js
+import { ClerkProvider } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from "next/font/google";
-import {ClerkProvider} from '@clerk/nextjs'
+import AuthHandler from '../components/AuthHandler'; // Import the AuthHandler component
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,13 +22,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <AuthHandler /> {/* Include the AuthHandler component */}
+          {children}
+        </body>
+      </html>
     </ClerkProvider>
   );
 }

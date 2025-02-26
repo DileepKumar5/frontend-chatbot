@@ -31,6 +31,7 @@ export default function ChatBox() {
     fetchFiles();
   }, []);
   
+  
 
   const sendMessage = async () => {
     if (!query.trim()) return;
@@ -182,7 +183,7 @@ export default function ChatBox() {
                       <div className="flex items-center bg-gray-700 p-1 rounded-lg ">
                       <div className="flex items-center mb-1 bg-gray-700 p-1 rounded-lg mx-2">
                         
-                          <img src="/bot.jpg" alt="Bot Avatar" className="w-6 h-6 rounded-full mr-2" />
+                          <img src="/bot.jpg" alt="Bot_Avatar" className="w-6 h-6 rounded-full mr-2" />
                           <span className="text-sm text-gray-300 ">ChatPDF</span>
                           
                       </div>
