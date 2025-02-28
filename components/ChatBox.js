@@ -194,9 +194,7 @@ export default function ChatBox() {
         <div className="w-full py-4 flex justify-between items-center px-6 bg-[#100f1d] shadow-lg">
 
           {/* Left Side (Logo) */}
-          <div className="flex items-center">
-            <img src="/smarttype.png" alt="SmartTender Logo" className="w-40 h-auto" />
-          </div>
+
 
           {/* Center Section (Rectangles) */}
           <div className="flex space-x-4">
