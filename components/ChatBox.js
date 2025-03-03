@@ -17,19 +17,17 @@ export default function ChatBox() {
   const [conversationCounter, setConversationCounter] = useState(1);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fetch-drive-files/`);
-        if (response.data.processed_files) {
-          setSyncedFiles(response.data.processed_files);
-        }
-      } catch (error) {
-        console.error("Error fetching files:", error);
+  const fetchFiles = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fetch-drive-files/`);
+      if (response.data.processed_files) {
+        setSyncedFiles(response.data.processed_files);
       }
-    };
-    fetchFiles();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  };
+
 
 
 
@@ -197,21 +195,26 @@ export default function ChatBox() {
 
 
           {/* Center Section (Rectangles) */}
-          <div className="flex space-x-4">
-            {/* Controls */}
+          <div className="flex space-x-4 items-center">
             <div className="bg-[#23232b] text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:bg-[#2e2e38]">
               Controls ▼
             </div>
-
-            {/* GPT-4 */}
             <div className="bg-[#23232b] text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:bg-[#2e2e38]">
               GPT-4 ▼
             </div>
-
-            {/* RAG */}
             <div className="bg-[#23232b] text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:bg-[#2e2e38]">
               RAG ⓘ
             </div>
+          </div>
+
+          {/* Fetch Files Button - Centered Between Rectangles and Theme Toggle */}
+          <div className="flex-grow flex justify-center">
+            <button
+              onClick={fetchFiles}
+              className="bg-[#23232b] text-white px-4 py-2 rounded-lg text-xl cursor-pointer hover:bg-[#2e2e38]"
+            >
+              Fetch Files from Drive
+            </button>
           </div>
 
           {/* Right Side (Theme Toggle or Additional Controls) */}
@@ -221,6 +224,7 @@ export default function ChatBox() {
               🌙
             </button>
           </div>
+
         </div>
 
 
