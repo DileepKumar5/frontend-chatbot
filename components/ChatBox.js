@@ -175,7 +175,7 @@ export default function ChatBox() {
         {sidebarOpen && (
           <div className="absolute bottom-4 left-4 flex items-center space-x-3">
             <img src="/gasco.jpeg" alt="User" className="w-12 h-12 rounded-full" />
-            <span className="text-white text-lg">Faisal Naqvi</span>
+            <span className="text-white text-lg">Faysal Naqvi</span>
           </div>
         )}
       </div>
