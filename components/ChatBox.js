@@ -207,7 +207,7 @@ export default function ChatBox() {
             </div>
           </div>
 
-          {/* Fetch Files Button - Centered Between Rectangles and Theme Toggle */}
+          {/* Fetch Files Button - Centered Between Rectangles and Theme Toggle
           <div className="flex-grow flex justify-center">
             <button
               onClick={fetchFiles}
@@ -215,7 +215,7 @@ export default function ChatBox() {
             >
               Fetch Files from Drive
             </button>
-          </div>
+          </div>  */}
 
           {/* Right Side (Theme Toggle or Additional Controls) */}
           <div className="flex items-center space-x-4">
