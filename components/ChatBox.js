@@ -269,7 +269,7 @@ export default function ChatBox() {
                         <div className="flex items-center mb-1  p-1 rounded-lg mx-2">
 
                           <img src="/gasco.jpeg" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
-                          <span className="text-lg text-white font-bold ">Abis Hussain</span>
+                          <span className="text-lg text-white font-bold ">Faysal Naqvi</span>
 
                         </div>
                       </div>
