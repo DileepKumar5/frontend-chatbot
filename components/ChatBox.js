@@ -174,8 +174,8 @@ export default function ChatBox() {
         {/* User Info */}
         {sidebarOpen && (
           <div className="absolute bottom-4 left-4 flex items-center space-x-3">
-            <img src="/abis.jpeg" alt="User" className="w-12 h-12 rounded-full" />
-            <span className="text-white text-lg">Abis Hussain Syed</span>
+            <img src="/gasco.jpeg" alt="User" className="w-12 h-12 rounded-full" />
+            <span className="text-white text-lg">Faisal Naqvi</span>
           </div>
         )}
       </div>
@@ -268,7 +268,7 @@ export default function ChatBox() {
                       <div className="flex items-center p-1 rounded-lg ">
                         <div className="flex items-center mb-1  p-1 rounded-lg mx-2">
 
-                          <img src="/abis.jpeg" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
+                          <img src="/gasco.jpeg" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
                           <span className="text-lg text-white font-bold ">Abis Hussain</span>
 
                         </div>
