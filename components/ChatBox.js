@@ -171,6 +171,7 @@ export default function ChatBox() {
         )}
       </div>
 
+
       {/* Chat Box */}
       <div className="flex flex-col flex-1 items-center">
         {/* Header */}
