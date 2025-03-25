@@ -5,6 +5,8 @@ import { PaperAirplaneIcon, PaperClipIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ArrowUpIcon, XMarkIcon, CloudArrowUpIcon } from "@heroicons/react/24/solid";
 import { motion } from "motion/react"
+import { ChevronDown, Check } from "lucide-react";
+
 export default function ChatBox() {
   const [query, setQuery] = useState("");
   const [conversations, setConversations] = useState([{ id: 1, messages: [] }]); // Store all conversations
@@ -110,6 +112,53 @@ export default function ChatBox() {
 
   // Check if the current active conversation is empty
   const isActiveConversationEmpty = conversations.find((conversation) => conversation.id === activeConversationId)?.messages.length === 0;
+  const models = [
+    {
+      name: "GPT-4",
+      description: " High-performance AI for professional and research use.",
+      abilities: ["📝", "💡", "🔍", "🤖"],
+    },
+    {
+      name: "GPT-4o mini",
+      description: " Fast, advanced AI with top-tier reasoning and multimodal support.",
+      abilities: ["🌍", "📝", "🔍"],
+    },
+    {
+      name: "GPT-3.5",
+      description: "Cost-effective AI for general tasks.",
+      abilities: ["📝", "🔍"],
+    },
+    {
+      name: "DALL·E 3",
+      description: "Creates high-quality images from text.",
+      abilities: ["🖼️"],
+    },
+  ];
+  const [selectedModel, setSelectedModel] = useState(models[0]);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  //for loading animation
+    const [statusIndex, setStatusIndex] = useState(0);
+    const statuses = [  
+      "Optimizing response...",
+      "Checking for accuracy...",
+      "Enhancing output...",
+      "Loading additional resources...",
+      "Ensuring consistency...",
+      "Refining details...",
+      "Cross-verifying data..."
+    ];
+  
+    useEffect(() => {
+      setStatusIndex(0); // Always start from the first status
+    
+      const interval = setInterval(() => {
+        setStatusIndex((prev) => (prev + 1) % statuses.length);
+      }, 1500);
+    
+      return () => clearInterval(interval);
+    }, []);
+   
 
   return (
     <div className={`flex h-screen w-full ${isDarkMode ? 'bg-[#1b1829] text-white' : 'bg-white text-black'} overflow-hidden`}>
@@ -170,22 +219,86 @@ export default function ChatBox() {
           </div>
         )}
       </div>
-
+ 
 
       {/* Chat Box */}
       <div className="flex flex-col flex-1 items-center">
         {/* Header */}
-        <div className={`w-full py-4 flex justify-between items-center px-6 ${isDarkMode ? 'bg-[#100f1d] shadow-lg' : 'white'} `}>
+        <div className={`w-full py-4 flex justify-between items-center px-6 ${isDarkMode ? 'bg-[#100f1d] shadow-lg' : 'bg-gray-200'} `}>
           {/* Center Section (Rectangles) */}
           <div className="flex space-x-4 items-center">
-            <div className={`${isDarkMode ? 'bg-[#23232b] text-white' : 'bg-gray-100 text-purple-950'}  px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}>
-              Controls ▼
-            </div>
-            <div className={`${isDarkMode ? 'bg-[#23232b] text-white' : 'bg-gray-100 text-purple-950'} px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}>
+          <div className={`${isDarkMode ? 'bg-[#23232b] text-white' : 'bg-gray-100 text-purple-950'} 
+            px-4 py-2 rounded-lg text-sm cursor-pointer 
+            hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'} 
+            flex items-center justify-between gap-2`}>
+              Controls <ChevronDown size={16} />
+          </div>
+
+            {/* <div className={`${isDarkMode ? 'bg-[#23232b] text-white' : 'bg-gray-100 text-purple-950'} px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}>
               GPT-4 ▼
+            </div> */}
+            <div  className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className={`${
+                isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-purple-950"
+              } w-36 px-4 py-2 rounded-lg text-sm cursor-pointer text-center hover:${
+                isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"
+              } flex items-center justify-between relative`}
+            >
+              <span className="flex-1 text-center">{selectedModel.name}</span>
+              <ChevronDown size={16} className="ml-2" />
+            </button>
+
+              {menuOpen && (
+                <div
+                className={`absolute top-full left-0 mt-1 w-64 rounded-lg shadow-lg p-2 z-10 ${
+                  isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-black"
+                }`}
+              >
+                  {models.map((model) => (
+                    <div
+                      key={model.name}
+                      onClick={() => {
+                        setSelectedModel(model);
+                        setMenuOpen(false);
+                      }}
+                      className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors 
+                        ${isDarkMode ? "hover:bg-[#2e2e38]" : "hover:bg-gray-300"}`}
+                      
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{model.name}</p>
+                        <p className="text-xs text-gray-400">{model.description}</p>
+                        <div className="flex gap-1 text-xs mt-1">{model.abilities.map((icon) => icon)}</div>
+                      </div>
+                      {selectedModel.name === model.name && <Check size={16} />}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className={`${isDarkMode ? 'bg-[#23232b] text-white' : 'bg-gray-100 text-purple-950'}  px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}>
-              RAG ⓘ
+            <div className="relative group">
+              <div
+                className={`${
+                  isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-purple-950"
+                } px-4 py-2 rounded-lg text-sm cursor-pointer hover:${
+                  isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"
+                }`}
+              >
+                RAG ⓘ
+              </div>
+
+              {/* Tooltip */}
+              <div
+                className={`absolute left-0 mt-1 w-64 p-2 text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                  isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-black"
+                }`}
+              >
+                <p className="text-sm font-semibold text-center">Retrieval-Augmented Generation:</p>
+                <p className="text-xs text-gray-400 text-center">improves AI-generated responses by incorporating relevant information from external data sources, ensuring more accurate and contextually rich answers.</p>
+              </div>
+              
             </div>
           </div>
 
@@ -194,7 +307,7 @@ export default function ChatBox() {
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className={`${isDarkMode ? 'bg-[#23232b]' : 'bg-gray-200'} text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}
+              className={`${isDarkMode ? 'bg-[#23232b]' : 'bg-gray-300'} text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-400'}`}
             >
               {isDarkMode ? '🌙' : '☀️'}
             </button>
@@ -228,20 +341,7 @@ export default function ChatBox() {
                       {/* Message or Loading Animation */}
                       <span className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed">
                         {loading ? (
-                          <div className="flex space-x-1">
-                            {/* {[0, 1, 2].map((i) => (
-                              <motion.span
-                                key={i}
-                                className="w-2 h-2 bg-gray-400 rounded-full"
-                                animate={{ y: [0, -5, 0] }} // Moves up and down
-                                transition={{
-                                  repeat: Infinity,
-                                  duration: 0.6,
-                                  ease: "easeInOut",
-                                  delay: i * 0.2, // Stagger effect
-                                }}
-                              />
-                            ))} */}
+                          <div className="flex space-x-1">                     
                           </div>
                         ) : (
                           msg.content
@@ -281,21 +381,27 @@ export default function ChatBox() {
                       {/* Message or Loading Animation */}
                       <span className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed">
                         
-                          <div className="flex space-x-1">
-                            {[0, 1, 2].map((i) => (
-                              <motion.span
-                                key={i}
-                                className="w-2 h-2 bg-gray-400 rounded-full"
-                                animate={{ y: [0, -5, 0] }} // Moves up and down
-                                transition={{
-                                  repeat: Infinity,
-                                  duration: 0.6,
-                                  ease: "easeInOut",
-                                  delay: i * 0.2, // Stagger effect
-                                }}
-                              />
-                            ))}
-                          </div>
+                      <div className="flex items-center space-x-3">
+                        {/* Spinning Circle */}
+                        <motion.div
+                          className="w-6 h-6 border-4 border-gray-300 border-t-transparent rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                        />
+                       
+                        {/* Status Text */}
+                        <motion.p
+                          key={statusIndex}
+                          className="text-gray-500 text-sm font-medium"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {statuses[statusIndex]}
+                        </motion.p>
+                      </div>
+
                        
                       </span>
                   </div>
