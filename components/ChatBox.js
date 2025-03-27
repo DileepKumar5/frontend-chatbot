@@ -36,21 +36,75 @@ export default function ChatBox() {
   };
 
   const cleanBotResponse = (content) => {
-    // Remove any markdown like bold, italics, and headers
-    let cleanedContent = content
+    // Detect markdown-style tables in the content
+    const tablePattern = /\|([^\|]+(?:\|[^\|]+)+)\|/g;  // Match Markdown tables
+    const markdownTableMatch = content.match(tablePattern);
+
+    if (markdownTableMatch) {
+      markdownTableMatch.forEach((table) => {
+        const htmlTable = convertMarkdownToHtmlTable(table);  // Convert Markdown table to HTML
+        content = content.replace(table, htmlTable); // Replace markdown table with HTML table
+      });
+    }
+
+    // Clean up any markdown like bold, italics, and headers
+    content = content
       .replace(/(\*\*|__)(.*?)\1/g, '$2')  // Remove bold (**text**)
       .replace(/(\*|_)(.*?)\1/g, '$2')    // Remove italics (*text* or _text_)
-      .replace(/(#{1,6})\s*(.*)/g, '$2');  // Remove headers (## text)
-    
-    // Add <br /> before numbered items (1., 2., 3., etc.)
-    cleanedContent = cleanedContent
-      .replace(/(\d+[\.)]\s+)/g, '<br />$1') // Add <br /> before numbers followed by a period or parenthesis (e.g., 1. or 2))
-      // .replace(/(\*|\-|\+)\s+/g, '<br />$1'); // Add <br /> before bullet points (*, -, +)
-  
-    return cleanedContent;
+      .replace(/(#{3,6})\s*(.*)/g, '$2')   // Remove headers (### text, #### text, ###### text)
+      .replace(/~~(.*?)~~/g, '$1');        // Remove strikethrough (~~text~~)
+      // content = content
+      // .replace(/(\d+[\.)]\s+)/g, '<br />$1') // Add <br /> before numbers followed by a period or parenthesis (e.g., 1. or 2))
+
+    return content;
   };
-  
-  
+
+
+
+  // Function to convert markdown-style tables to HTML
+  const convertMarkdownToHtmlTable = (markdown) => {
+    const lines = markdown.trim().split("\n");
+
+    // Extract the header row
+    const headers = lines[0].split("|").map((header) => header.trim()).filter(Boolean);
+
+    // Remove separator line (the line with dashes used to separate headers)
+    const separator = lines[1].split("|").map((sep) => sep.trim()).filter(Boolean);
+    if (separator.every((col) => col === "" || col === "-")) {
+      lines.splice(1, 1); // Remove the separator line if it is just dashes
+    }
+
+    // Extract rows (lines after the header)
+    const rows = lines.slice(1).map((line) => {
+      const columns = line.split("|").map((col) => col.trim()).filter(Boolean);
+      return columns;
+    });
+
+    // Construct the HTML table
+    let tableHtml = `<table class="table-auto border-collapse border border-gray-300 w-full">`;
+
+    // Add table headers
+    tableHtml += "<thead><tr>";
+    headers.forEach((header) => {
+      tableHtml += `<th class="border border-gray-300 p-2 text-left">${header}</th>`;
+    });
+    tableHtml += "</tr></thead>";
+
+    // Add table body (rows)
+    tableHtml += "<tbody>";
+    rows.forEach((row) => {
+      tableHtml += "<tr>";
+      row.forEach((cell) => {
+        tableHtml += `<td class="border border-gray-300 p-2">${cell}</td>`;
+      });
+      tableHtml += "</tr>";
+    });
+    tableHtml += "</tbody>";
+
+    tableHtml += "</table>";
+
+    return tableHtml;
+  };
 
 
 
@@ -203,9 +257,11 @@ export default function ChatBox() {
 
                       {/* Message or Loading Animation */}
                       <span
-                        className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed"
+                        className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-tight whitespace-pre-line"
                         dangerouslySetInnerHTML={{ __html: cleanBotResponse(msg.content) }}
                       ></span>
+
+
 
                     </div>
                   )}
