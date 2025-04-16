@@ -1,9 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { OpenAI } from 'openai';  // Import OpenAI
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -16,28 +13,30 @@ export const POST = async (req: NextRequest) => {
       return new Response('Unauthorized', { status: 401 });
     }
 
+    // Get content and conversationId from the request body
     const { content, conversationId } = await req.json();
     console.log('Request Body:', { content, conversationId });
 
+    // Ensure the content is provided in the request
     if (!content) {
       console.error('Missing message content');
       return new Response('Missing content', { status: 400 });
     }
 
-    // Ensure the user exists or create a new user
+    // Ensure the user exists or create a new user if not found
     let user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       console.log('User not found, creating a new user...');
       user = await prisma.user.create({
         data: {
           id: userId,
-          email: null,
+          email: null, // Adjust this to save the email if necessary
           history: [],
         },
       });
     }
 
-    // Create new conversation if not provided, or find existing one
+    // Handle conversation creation or selection
     let convoId = conversationId;
     let conversation;
     if (!convoId) {
@@ -65,68 +64,72 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
-    // Get bot's response from OpenAI
-    const botResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // Or the model you prefer
-      messages: [{ role: 'user', content }],
+    // Send the message content to your custom API (replace with the correct endpoint)
+    const apiResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
     });
 
-    // Check if the response has choices
-    if (!botResponse.choices || botResponse.choices.length === 0) {
-      console.error('No choices in response');
-      return new Response('Bot response not available', { status: 500 });
+    if (!apiResponse.ok) {
+      const errorData = await apiResponse.json(); // Capture the response for debugging
+      console.error('Failed API response:', errorData);
+      return new Response('Failed to get response from custom API', { status: 500 });
     }
 
-    // Create the user's message in the conversation
-    const message = await prisma.message.create({
-      data: {
-        content,
-        conversationId: convoId,
-      },
-    });
+    const apiData = await apiResponse.json();
+    const botResponse = apiData.response || "Bot response not available"; // Handle missing response gracefully
 
-    // Save bot response as a message
-    await prisma.message.create({
-      data: {
-        content: botResponse.choices[0]?.message?.content || "Bot response not available",
-        conversationId: convoId,
-      },
-    });
-
-    // Update user's history
-    const updatedHistory = Array.isArray(user.history) ? [...user.history] : [];
-
+    // Update user history and create messages in a transaction
+    const updatedHistory = [...(Array.isArray(user.history) ? user.history : [])];
     updatedHistory.push({
       content,
       conversationId: convoId,
       timestamp: new Date().toISOString(),
     });
 
-    // Wrap the user update and message creation in a transaction for consistency
-    await prisma.$transaction([
+    // Using a transaction to ensure atomicity of operations (create user message, bot response, and update history)
+    const [userMessage, botMessage] = await prisma.$transaction([
+      prisma.message.create({
+        data: {
+          content,
+          conversationId: convoId,
+          sender: 'user', // Make sure 'sender' exists in the Prisma schema
+        },
+      }),
+      prisma.message.create({
+        data: {
+          content: botResponse,
+          conversationId: convoId,
+          sender: 'bot',
+        },
+      }),
       prisma.user.update({
         where: { id: userId },
         data: { history: updatedHistory },
       }),
-      prisma.message.create({
-        data: {
-          content: botResponse.choices[0]?.message?.content || "Bot response not available",
-          conversationId: convoId,
-        },
-      }),
     ]);
 
     console.log('Message and history saved successfully');
+
+    // Fetch the full conversation messages, ordered by creation time
+    const conversationMessages = await prisma.message.findMany({
+      where: { conversationId: convoId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Return the updated conversation with both user and bot messages
     return new Response(
       JSON.stringify({
-        messageId: message.id,
         conversationId: convoId,
-        response: botResponse.choices[0]?.message?.content || "Bot response not available",
+        messages: conversationMessages,
       }),
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error in /api/message:', error);
+    console.error('Error in /query API:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 };

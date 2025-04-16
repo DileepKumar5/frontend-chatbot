@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./node_modules/.prisma/client"
 }
 
 datasource db {
@@ -7,27 +8,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String         @id
-  email         String?
-  history       Json?
-  conversations Conversation[]
-}
-
 model Conversation {
-  id        String    @id @default(uuid())
+  id        String     @id @default(cuid())   // Ensure id is String
   title     String
+  user      User       @relation(fields: [userId], references: [id])
   userId    String
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id])
-  messages  Message[]
+  messages  Message[]  // Relation to messages
 }
 
 model Message {
-  id             String       @id @default(uuid())
+  id             Int      @id @default(autoincrement())
   content        String
-  vectorId       String?
-  conversationId String
-  createdAt      DateTime     @default(now())
+  sender         String
+  conversationId String   // Change this to String to match the Conversation id
   conversation   Conversation @relation(fields: [conversationId], references: [id])
+  createdAt      DateTime @default(now())
+}
+
+model User {
+  id             String      @id
+  email          String?     
+  history        Json        @default("[]")
+  conversations  Conversation[]  // User's conversations
 }

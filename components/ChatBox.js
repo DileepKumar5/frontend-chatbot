@@ -109,42 +109,42 @@ export default function ChatBox() {
   };
 
 
-
   const sendMessage = async () => {
     if (!query.trim()) return;
-  
+
     const userMessage = { role: "user", content: query };
-  
-    // Make a deep copy of the conversations
-    const newConversations = JSON.parse(JSON.stringify(conversations));
+    const newConversations = [...conversations];
     const activeConversation = newConversations.find(c => c.id === activeConversationId);
-  
+
+    // Add the user's message to the conversation
     activeConversation.messages.push(userMessage);
-    setConversations(newConversations); // Update the conversation with the user message immediately
-    setLoading(true);
-    setQuery("");
-  
+    setConversations(newConversations);  // Update the conversations state
+
+    setLoading(true);  // Start loading state
+    setQuery("");  // Clear the input field
+
     try {
       const response = await axios.post(
-        '/api/message',
-        { content: query }, // 👈 Only sending user question
+        `${process.env.NEXT_PUBLIC_API_URL}/query/`,
+        JSON.stringify({ query }),
         { headers: { "Content-Type": "application/json" } }
       );
-  
-      const botResponse = response.data.response || "Bot response not available";
-      const botMessage = { role: "bot", content: botResponse };
-  
+
+      const botResponse = response.data.response || response.data;
+      const botMessage = {
+        role: "bot",
+        content: typeof botResponse === "string" ? botResponse : JSON.stringify(botResponse),
+      };
+
+      // Add the bot's response to the conversation
       activeConversation.messages.push(botMessage);
-      setConversations(newConversations); // Update with the bot message after receiving the response
+      setConversations(newConversations);  // Update the conversations state
     } catch (error) {
-      console.error('Error in /api/message:', error);
-      // Consider using a better UI approach like a toast or inline error message
-      alert('Something went wrong. Please try again later.');
+      console.error("Error fetching response:", error);
     }
-  
-    setLoading(false);
+
+    setLoading(false);  // End loading state
   };
-  
   
   
 
