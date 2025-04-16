@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import { useUser } from "@clerk/nextjs";
 
 export default function Sidebar({ 
   sidebarOpen, 
@@ -11,8 +12,11 @@ export default function Sidebar({
   setActiveConversationId, 
   deleteConversation 
 }) {
+  const { user } = useUser(); // Clerk hook to get authenticated user
+
   return (
-    <div className={`transition-all duration-300 ${isDarkMode ? 'bg-[#100f1d]' : 'bg-[#100f1d]'} px-4 ${sidebarOpen ? "w-80" : "w-20"} overflow-hidden`}>
+    <div className={`transition-all duration-300 ${isDarkMode ? 'bg-[#100f1d]' : 'bg-[#100f1d]'} px-4 ${sidebarOpen ? "w-80" : "w-20"} overflow-hidden relative h-screen`}>
+      
       {/* Logo Section */}
       <div className="flex flex-col items-center mt-4">
         <img src="/smarttype.png" alt="Logo" className="w-40 h-auto" />
@@ -22,7 +26,7 @@ export default function Sidebar({
       {sidebarOpen && (
         <button
           onClick={addNewConversation}
-          className={`w-full ${isDarkMode ? 'bg-[#2d3748] hover:bg-[#4a5568]' : 'bg-[#2d3748] hover:bg-[#4a5568]'} p-3 rounded-lg text-white font-semibold transition`}
+          className={`w-full ${isDarkMode ? 'bg-[#2d3748] hover:bg-[#4a5568]' : 'bg-[#2d3748] hover:bg-[#4a5568]'} p-3 rounded-lg text-white font-semibold transition mt-6`}
         >
           + New Chat
         </button>
@@ -40,7 +44,9 @@ export default function Sidebar({
                 onClick={() => setActiveConversationId(conversation.id)}
               >
                 <span className={`${isDarkMode ? 'text-white' : 'text-white'} truncate w-3/4`}>
-                  {conversation.messages.length > 0 ? conversation.messages[0].content.slice(0, 25) + "..." : "New Chat"}
+                  {conversation.messages.length > 0
+                    ? conversation.messages[0].content.slice(0, 25) + "..."
+                    : "New Chat"}
                 </span>
                 <button
                   className={`${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-white'}`}
@@ -59,11 +65,17 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* User Info */}
-      {sidebarOpen && (
+      {/* User Info (From Clerk) */}
+      {sidebarOpen && user && (
         <div className="absolute bottom-4 left-4 flex items-center space-x-3">
-          <img src="/gasco.jpeg" alt="User" className="w-12 h-12 rounded-full" />
-          <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg`}>Faysal Naqvi</span>
+          <img 
+            src={user.imageUrl} 
+            alt="User Profile" 
+            className="w-12 h-12 rounded-full" 
+          />
+          <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg`}>
+            {user.fullName || user.username || "User"}
+          </span>
         </div>
       )}
     </div>

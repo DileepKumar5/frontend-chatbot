@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
 import Sidebar from "./Sidebar"; // Import Sidebar component
 import HeaderControls from "./HeaderControls";
+import { useUser } from "@clerk/nextjs";
 
 
 export default function ChatBox() {
@@ -22,6 +23,7 @@ export default function ChatBox() {
   const [isDarkMode, setIsDarkMode] = useState(true); // Track theme
   const messagesEndRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState(null);  // Add this line to define loadingMessage state
+  const { user } = useUser();  // Get the current authenticated user
 
 
   const fetchFiles = async () => {
@@ -53,8 +55,8 @@ export default function ChatBox() {
       .replace(/(\*|_)(.*?)\1/g, '$2')    // Remove italics (*text* or _text_)
       .replace(/(#{3,6})\s*(.*)/g, '$2')   // Remove headers (### text, #### text, ###### text)
       .replace(/~~(.*?)~~/g, '$1');        // Remove strikethrough (~~text~~)
-      // content = content
-      // .replace(/(\d+[\.)]\s+)/g, '<br />$1') // Add <br /> before numbers followed by a period or parenthesis (e.g., 1. or 2))
+    // content = content
+    // .replace(/(\d+[\.)]\s+)/g, '<br />$1') // Add <br /> before numbers followed by a period or parenthesis (e.g., 1. or 2))
 
     return content;
   };
@@ -108,43 +110,43 @@ export default function ChatBox() {
 
 
 
-
   const sendMessage = async () => {
     if (!query.trim()) return;
-
+  
     const userMessage = { role: "user", content: query };
-    const newConversations = [...conversations];
+  
+    // Make a deep copy of the conversations
+    const newConversations = JSON.parse(JSON.stringify(conversations));
     const activeConversation = newConversations.find(c => c.id === activeConversationId);
-
-    // Add the user's message to the conversation
+  
     activeConversation.messages.push(userMessage);
-    setConversations(newConversations);  // Update the conversations state
-
-    setLoading(true);  // Start loading state
-    setQuery("");  // Clear the input field
-
+    setConversations(newConversations); // Update the conversation with the user message immediately
+    setLoading(true);
+    setQuery("");
+  
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/query/`,
-        JSON.stringify({ query }),
+        '/api/message',
+        { content: query }, // 👈 Only sending user question
         { headers: { "Content-Type": "application/json" } }
       );
-
-      const botResponse = response.data.response || response.data;
-      const botMessage = {
-        role: "bot",
-        content: typeof botResponse === "string" ? botResponse : JSON.stringify(botResponse),
-      };
-
-      // Add the bot's response to the conversation
+  
+      const botResponse = response.data.response || "Bot response not available";
+      const botMessage = { role: "bot", content: botResponse };
+  
       activeConversation.messages.push(botMessage);
-      setConversations(newConversations);  // Update the conversations state
+      setConversations(newConversations); // Update with the bot message after receiving the response
     } catch (error) {
-      console.error("Error fetching response:", error);
+      console.error('Error in /api/message:', error);
+      // Consider using a better UI approach like a toast or inline error message
+      alert('Something went wrong. Please try again later.');
     }
-
-    setLoading(false);  // End loading state
+  
+    setLoading(false);
   };
+  
+  
+  
 
 
   const handleFileUpload = (event) => {
@@ -267,17 +269,25 @@ export default function ChatBox() {
                   )}
                   {msg.role === "user" && (
                     <div className="flex flex-col items-start pt-3">
-                      <div className="flex items-center p-1 rounded-lg ">
+                      <div className="flex items-center p-1 rounded-lg">
                         <div className="flex items-center mb-1 p-1 rounded-lg mx-2">
-                          <img src="/gasco.jpeg" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
-                          <span className="text-lg font-bold ">Faysal Naqvi</span>
+                          <img
+                            src={user?.imageUrl || "/gasco.jpeg"} // Clerk profile image or fallback
+                            alt="User Avatar"
+                            className="w-9 h-9 rounded-full mr-2"
+                          />
+                          <span className="text-lg font-bold text-white">
+                            {user?.fullName || user?.username || "User"}
+                          </span>
                         </div>
                       </div>
-                      <span className="p-1  rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed whitespace-pre-wrap">
+                      <span className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed whitespace-pre-wrap text-white">
                         {msg.content}
                       </span>
                     </div>
                   )}
+
+
 
                 </div>
 
