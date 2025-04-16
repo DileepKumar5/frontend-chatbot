@@ -109,6 +109,8 @@ export default function ChatBox() {
   };
 
 
+
+
   const sendMessage = async () => {
     if (!query.trim()) return;
 
@@ -145,8 +147,6 @@ export default function ChatBox() {
 
     setLoading(false);  // End loading state
   };
-  
-  
 
 
   const handleFileUpload = (event) => {
