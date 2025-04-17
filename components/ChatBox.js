@@ -148,6 +148,7 @@ export default function ChatBox() {
     setLoading(false);  // End loading state
   };
 
+ 
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
