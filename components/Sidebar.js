@@ -95,17 +95,30 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* User Info (From Clerk) */}
+      {/* User Info & Logout */}
       {sidebarOpen && user && (
-        <div className="absolute bottom-4 left-4 flex items-center space-x-3">
-          <img 
-            src={user.imageUrl} 
-            alt="User Profile" 
-            className="w-12 h-12 rounded-full" 
-          />
-          <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg`}>
-            {user.fullName || user.username || "User"}
-          </span>
+        <div className="absolute bottom-4 left-4 w-[calc(100%-2rem)]" ref={logoutRef}>
+          <div 
+            className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+            onClick={toggleLogout}
+          >
+            <img 
+              src={user.imageUrl} 
+              alt="User Profile" 
+              className="w-12 h-12 rounded-full" 
+            />
+            <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg truncate`}>
+              {user.fullName || user.username || "User"}
+            </span>
+          </div>
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="absolute bottom-full left-0 mb-2 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center"
+            >
+              Logout
+            </button>
+          )}
         </div>
       )}
     </div>
