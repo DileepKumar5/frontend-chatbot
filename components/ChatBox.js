@@ -204,7 +204,7 @@ export default function ChatBox() {
     }
   };
   
-  // Update the sendMessage function to ensure message structure
+  // Update the sendMessage function to handle streaming responses
   const sendMessage = async () => {
     if (!query.trim()) return;
     
@@ -222,7 +222,6 @@ export default function ChatBox() {
       timestamp: timestamp
     };
   
-    // If this is a new conversation, initialize the created_at
     if (!activeConversation.created_at) {
       activeConversation.created_at = timestamp;
     }
@@ -235,27 +234,45 @@ export default function ChatBox() {
     setQuery("");
   
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/query/`,
-        { query },
-        { headers: { "Content-Type": "application/json" } }
-      );
-  
+      // Add a placeholder bot message
       const botMessage = {
         role: "bot",
-        content: response.data.response || "Error: Something went wrong.",
+        content: "",
         timestamp: new Date().toISOString()
       };
-  
       activeConversation.messages.push(botMessage);
       setConversations([...conversations]);
   
-      await saveConversationToBackend(activeConversation);
+      // Create EventSource for streaming
+      const eventSource = new EventSource(
+        `${process.env.NEXT_PUBLIC_API_URL}/query/?query=${encodeURIComponent(query)}`
+      );
+  
+      let fullResponse = "";
+  
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.response) {
+          fullResponse += data.response;
+          // Update the last message (bot's message) with the streaming content
+          const updatedMessages = [...activeConversation.messages];
+          updatedMessages[updatedMessages.length - 1].content = fullResponse;
+          activeConversation.messages = updatedMessages;
+          setConversations([...conversations]);
+        }
+      };
+  
+      eventSource.onerror = () => {
+        eventSource.close();
+        setLoading(false);
+        // Save the complete conversation
+        saveConversationToBackend(activeConversation);
+      };
+  
     } catch (error) {
       console.error("Error fetching response:", error);
+      setLoading(false);
     }
-  
-    setLoading(false);
   };
   
  // Update addNewConversation to include all required fields
