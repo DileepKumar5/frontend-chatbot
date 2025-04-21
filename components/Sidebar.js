@@ -95,7 +95,7 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* User Info & Logout */}
+      {/* User Info (From Clerk) */}
       {sidebarOpen && user && (
         <div className="absolute bottom-4 left-4 w-[calc(100%-2rem)]" ref={logoutRef}>
           <div 

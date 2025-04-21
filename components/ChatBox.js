@@ -26,6 +26,7 @@ export default function ChatBox() {
   const [loadingMessage, setLoadingMessage] = useState(null);  // Add this line to define loadingMessage state
   const [mounted, setMounted] = useState(false);
   const { user, isLoaded, isSignedIn } = useUser(); // Get user info from Clerk
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
 
   const fetchFiles = async () => {
@@ -110,16 +111,14 @@ export default function ChatBox() {
     return tableHtml;
   };
 
-  // Fetch conversations from the backend
+  // Optimize conversation loading
   const loadConversationsFromBackend = async () => {
     if (!user?.id) return;
     try {
+      setIsLoadingHistory(true);
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`);
-      if (response.data && response.data.length > 0) {
-        setConversations(response.data);
-        // Don't set active conversation here, we'll create a new one
-      }
-      // Always create a new conversation
+      
+      // Create new conversation first
       const newConversation = {
         id: Date.now(),
         messages: [],
@@ -127,11 +126,20 @@ export default function ChatBox() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      setConversations(prev => [newConversation, ...prev]);
+
+      if (response.data && response.data.length > 0) {
+        // Sort conversations by date and limit to most recent ones
+        const sortedConversations = response.data
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+          .slice(0, 15); // Only load last 15 conversations
+        
+        setConversations([newConversation, ...sortedConversations]);
+      } else {
+        setConversations([newConversation]);
+      }
       setActiveConversationId(newConversation.id);
     } catch (error) {
       console.error("Error loading conversations:", error);
-      // Even if there's an error, create a new conversation
       const newConversation = {
         id: Date.now(),
         messages: [],
@@ -141,6 +149,8 @@ export default function ChatBox() {
       };
       setConversations([newConversation]);
       setActiveConversationId(newConversation.id);
+    } finally {
+      setIsLoadingHistory(false);
     }
   };
 
