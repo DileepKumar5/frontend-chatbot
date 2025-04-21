@@ -13,8 +13,8 @@ import { useUser } from "@clerk/nextjs";
 
 export default function ChatBox() {
   const [query, setQuery] = useState("");
-  const [conversations, setConversations] = useState([{ id: 1, messages: [] }]); // Store all conversations
-  const [activeConversationId, setActiveConversationId] = useState(1); // Track active conversation
+  const [conversations, setConversations] = useState([]); // Initialize with empty array
+  const [activeConversationId, setActiveConversationId] = useState(null); // Initialize with null
   const [syncedFiles, setSyncedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -115,21 +115,30 @@ export default function ChatBox() {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`);
       if (response.data && response.data.length > 0) {
         setConversations(response.data);
-        setActiveConversationId(response.data[0].id);
-      } else {
-        // Create a new conversation if none exists
-        const newConversation = {
-          id: Date.now(),
-          messages: [],
-          title: "New Conversation",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setConversations([newConversation]);
-        setActiveConversationId(newConversation.id);
+        // Don't set active conversation here, we'll create a new one
       }
+      // Always create a new conversation
+      const newConversation = {
+        id: Date.now(),
+        messages: [],
+        title: "New Conversation",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setConversations(prev => [newConversation, ...prev]);
+      setActiveConversationId(newConversation.id);
     } catch (error) {
       console.error("Error loading conversations:", error);
+      // Even if there's an error, create a new conversation
+      const newConversation = {
+        id: Date.now(),
+        messages: [],
+        title: "New Conversation",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setConversations([newConversation]);
+      setActiveConversationId(newConversation.id);
     }
   };
 
