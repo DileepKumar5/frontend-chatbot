@@ -23,7 +23,7 @@ export default function ChatBox() {
   const [isDarkMode, setIsDarkMode] = useState(true); // Track theme
   const messagesEndRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState(null);  // Add this line to define loadingMessage state
-  const { user } = useUser();  // Get the current authenticated user
+  const { user, isLoaded, isSignedIn } = useUser(); // Get user info from Clerk
 
 
   const fetchFiles = async () => {
@@ -108,46 +108,168 @@ export default function ChatBox() {
     return tableHtml;
   };
 
+  // Fetch conversations from the backend
+  const loadConversationsFromBackend = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`);
+      if (response.data && response.data.length > 0) {
+        setConversations(response.data);
+        setActiveConversationId(response.data[0].id);
+      } else {
+        // Create a new conversation if none exists
+        const newConversation = {
+          id: Date.now(),
+          messages: [],
+          title: "New Conversation",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setConversations([newConversation]);
+        setActiveConversationId(newConversation.id);
+      }
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+    }
+  };
+
+  // Load conversations when component mounts and user is authenticated
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user?.id) {
+      loadConversationsFromBackend();
+    }
+  }, [isLoaded, isSignedIn, user?.id]);
+
+  // Ensure activeConversationId is set after conversations are loaded
+  useEffect(() => {
+    if (conversations.length > 0 && !activeConversationId) {
+      setActiveConversationId(conversations[0].id); // Set the first conversation as active if none is set
+    }
+  }, [conversations, activeConversationId]);
 
 
-
+  const saveConversationToBackend = async (conversation) => {
+    if (!user?.id) return;
+    try {
+      // Ensure messages have the correct structure
+      const formattedMessages = conversation.messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp
+      }));
+  
+      const payload = {
+        id: conversation.id,  // Make sure this is a number
+        user_id: user.id,
+        messages: formattedMessages,
+        title: conversation.messages[0]?.content.slice(0, 30) || "New Conversation",
+        created_at: conversation.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+  
+      console.log("Sending payload:", payload); // Debug log
+  
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+    } catch (error) {
+      console.error("Error saving conversation to backend:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+    }
+  };
+  
+  // Update the sendMessage function to ensure message structure
   const sendMessage = async () => {
     if (!query.trim()) return;
-
-    const userMessage = { role: "user", content: query };
-    const newConversations = [...conversations];
-    const activeConversation = newConversations.find(c => c.id === activeConversationId);
-
-    // Add the user's message to the conversation
+    
+    const activeConversation = conversations.find((conv) => conv.id === activeConversationId);
+    if (!activeConversation) {
+      console.error("No active conversation found");
+      return;
+    }
+  
+    const timestamp = new Date().toISOString();
+    
+    const userMessage = {
+      role: "user",
+      content: query,
+      timestamp: timestamp
+    };
+  
+    // If this is a new conversation, initialize the created_at
+    if (!activeConversation.created_at) {
+      activeConversation.created_at = timestamp;
+    }
+    activeConversation.updated_at = timestamp;
+  
     activeConversation.messages.push(userMessage);
-    setConversations(newConversations);  // Update the conversations state
-
-    setLoading(true);  // Start loading state
-    setQuery("");  // Clear the input field
-
+    setConversations([...conversations]);
+  
+    setLoading(true);
+    setQuery("");
+  
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/query/`,
-        JSON.stringify({ query }),
+        { query },
         { headers: { "Content-Type": "application/json" } }
       );
-
-      const botResponse = response.data.response || response.data;
+  
       const botMessage = {
         role: "bot",
-        content: typeof botResponse === "string" ? botResponse : JSON.stringify(botResponse),
+        content: response.data.response || "Error: Something went wrong.",
+        timestamp: new Date().toISOString()
       };
-
-      // Add the bot's response to the conversation
+  
       activeConversation.messages.push(botMessage);
-      setConversations(newConversations);  // Update the conversations state
+      setConversations([...conversations]);
+  
+      await saveConversationToBackend(activeConversation);
     } catch (error) {
       console.error("Error fetching response:", error);
     }
-
-    setLoading(false);  // End loading state
+  
+    setLoading(false);
   };
+  
+ // Update addNewConversation to include all required fields
+ const addNewConversation = () => {
+  const timestamp = new Date().toISOString();
+  const newConversation = {
+    id: Date.now(), // This will be a number
+    messages: [],
+    title: "New Conversation",
+    created_at: timestamp,
+    updated_at: timestamp,
+    user_id: user?.id
+  };
+  setConversations([newConversation, ...conversations]);
+  setActiveConversationId(newConversation.id);
+};
 
+// Delete a conversation
+const deleteConversation = async (id) => {
+  try {
+    // Delete from backend first
+    await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}/${id}`);
+    
+    // Then update local state
+    const newConversations = conversations.filter((conv) => conv.id !== id);
+    setConversations(newConversations);
+
+    // If the deleted conversation was active, set the first conversation as active
+    if (id === activeConversationId) {
+      setActiveConversationId(newConversations[0]?.id || null);
+    }
+  } catch (error) {
+    console.error("Error deleting conversation:", error);
+  }
+};
  
 
   const handleFileUpload = (event) => {
@@ -162,38 +284,27 @@ export default function ChatBox() {
     }
   };
 
-  const addNewConversation = () => {
-    const newId = conversationCounter + 1;
-    const newConversation = { id: newId, messages: [] };
-    setConversations([newConversation, ...conversations]);
-    setActiveConversationId(newId);
-    setConversationCounter(newId);
-  };
 
-  const deleteConversation = (id) => {
-    const newConversations = conversations.filter((conversation) => conversation.id !== id);
-    setConversations(newConversations);
 
-    // If the deleted conversation was active, set the active conversation to the first one
-    if (id === activeConversationId) {
-      setActiveConversationId(newConversations[0]?.id || null);
-    }
-  };
+  
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   useEffect(() => {
+    // Scroll to the bottom of the chat window
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversations, activeConversationId]);  // Add activeConversationId to ensure scrolling works when switching conversations
+  }, [conversations]);
+
+  // Check if the active conversation is empty
+  const isActiveConversationEmpty = !conversations.find(
+    (conv) => conv.id === activeConversationId
+  )?.messages.length;
 
 
 
-
-  // Check if the current active conversation is empty
-  const isActiveConversationEmpty = conversations.find((conversation) => conversation.id === activeConversationId)?.messages.length === 0;
-
+ 
   //for loading animation
   const [statusIndex, setStatusIndex] = useState(0);
   const statuses = [
