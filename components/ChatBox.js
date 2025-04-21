@@ -9,6 +9,7 @@ import { ChevronDown, Check } from "lucide-react";
 import Sidebar from "./Sidebar"; // Import Sidebar component
 import HeaderControls from "./HeaderControls";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 
 export default function ChatBox() {
@@ -23,6 +24,7 @@ export default function ChatBox() {
   const [isDarkMode, setIsDarkMode] = useState(true); // Track theme
   const messagesEndRef = useRef(null);
   const [loadingMessage, setLoadingMessage] = useState(null);  // Add this line to define loadingMessage state
+  const [mounted, setMounted] = useState(false);
   const { user, isLoaded, isSignedIn } = useUser(); // Get user info from Clerk
 
 
@@ -264,8 +266,12 @@ export default function ChatBox() {
 // Delete a conversation
 const deleteConversation = async (id) => {
   try {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}/${id}`;
+    console.log("Deleting conversation with URL:", url);
+    
     // Delete from backend first
-    await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}/${id}`);
+    const response = await axios.delete(url);
+    console.log("Delete response:", response.data);
     
     // Then update local state
     const newConversations = conversations.filter((conv) => conv.id !== id);
@@ -277,6 +283,15 @@ const deleteConversation = async (id) => {
     }
   } catch (error) {
     console.error("Error deleting conversation:", error);
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+      console.error("Response headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("Request error:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
   }
 };
  
@@ -336,6 +351,13 @@ const deleteConversation = async (id) => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div className={`flex h-screen w-full ${isDarkMode ? 'bg-[#1b1829] text-white' : 'bg-white text-black'} overflow-hidden`}>
@@ -388,12 +410,12 @@ const deleteConversation = async (id) => {
 
                     </div>
                   )}
-                  {msg.role === "user" && (
+                  {msg.role === "user" && mounted && (
                     <div className="flex flex-col items-start pt-3">
                       <div className="flex items-center p-1 rounded-lg">
                         <div className="flex items-center mb-1 p-1 rounded-lg mx-2">
                           <img
-                            src={user?.imageUrl || "/gasco.jpeg"} // Clerk profile image or fallback
+                            src={user?.imageUrl || "/gasco.jpeg"}
                             alt="User Avatar"
                             className="w-9 h-9 rounded-full mr-2"
                           />

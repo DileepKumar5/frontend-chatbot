@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export default function Sidebar({ 
   sidebarOpen, 
@@ -12,7 +13,36 @@ export default function Sidebar({
   setActiveConversationId, 
   deleteConversation 
 }) {
-  const { user } = useUser(); // Clerk hook to get authenticated user
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [showLogout, setShowLogout] = useState(false);
+  const logoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (logoutRef.current && !logoutRef.current.contains(event.target)) {
+        setShowLogout(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.push('/sign-in');
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  const toggleLogout = () => {
+    setShowLogout(!showLogout);
+  };
 
   return (
     <div className={`transition-all duration-300 ${isDarkMode ? 'bg-[#100f1d]' : 'bg-[#100f1d]'} px-4 ${sidebarOpen ? "w-80" : "w-20"} overflow-hidden relative h-screen`}>
@@ -65,17 +95,30 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* User Info (From Clerk) */}
+      {/* User Info & Logout */}
       {sidebarOpen && user && (
-        <div className="absolute bottom-4 left-4 flex items-center space-x-3">
-          <img 
-            src={user.imageUrl} 
-            alt="User Profile" 
-            className="w-12 h-12 rounded-full" 
-          />
-          <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg`}>
-            {user.fullName || user.username || "User"}
-          </span>
+        <div className="absolute bottom-4 left-4 w-[calc(100%-2rem)]" ref={logoutRef}>
+          <div 
+            className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+            onClick={toggleLogout}
+          >
+            <img 
+              src={user.imageUrl} 
+              alt="User Profile" 
+              className="w-12 h-12 rounded-full" 
+            />
+            <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg truncate`}>
+              {user.fullName || user.username || "User"}
+            </span>
+          </div>
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="absolute bottom-full left-0 mb-2 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center"
+            >
+              Logout
+            </button>
+          )}
         </div>
       )}
     </div>
