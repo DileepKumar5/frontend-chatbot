@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, LogOut } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const HeaderControls = ({ isDarkMode, toggleTheme }) => {
+  const { signOut } = useClerk();
+  const router = useRouter();
   const models = [
     {
       name: "GPT-4",
@@ -27,6 +31,15 @@ const HeaderControls = ({ isDarkMode, toggleTheme }) => {
 
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.push('/sign-in');
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <div className={`w-full py-4 flex justify-between items-center px-6 ${isDarkMode ? 'bg-[#100f1d] shadow-lg' : 'bg-gray-200'} `}>
@@ -112,13 +125,20 @@ const HeaderControls = ({ isDarkMode, toggleTheme }) => {
         </div>
       </div>
 
-      {/* Right Section (Theme Toggle) */}
+      {/* Right Section (Theme Toggle and Logout) */}
       <div className="flex items-center space-x-4">
         <button
           onClick={toggleTheme}
           className={`${isDarkMode ? 'bg-[#23232b]' : 'bg-gray-300'} text-white px-4 py-2 rounded-lg text-sm cursor-pointer hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-400'}`}
         >
           {isDarkMode ? '🌙' : '☀️'}
+        </button>
+        <button
+          onClick={handleLogout}
+          className={`${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white px-4 py-2 rounded-lg text-sm cursor-pointer flex items-center space-x-2 transition-colors duration-200`}
+        >
+          <LogOut size={16} />
+          <span>Logout</span>
         </button>
       </div>
     </div>
