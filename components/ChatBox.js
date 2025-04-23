@@ -73,34 +73,38 @@ export default function ChatBox() {
     // Extract the header row
     const headers = lines[0].split("|").map((header) => header.trim()).filter(Boolean);
 
-    // Remove separator line (the line with dashes used to separate headers)
-    const separator = lines[1].split("|").map((sep) => sep.trim()).filter(Boolean);
-    if (separator.every((col) => col === "" || col === "-")) {
-      lines.splice(1, 1); // Remove the separator line if it is just dashes
+    // Skip separator line if it exists (the line with dashes)
+    let dataRows = lines.slice(1);
+    if (dataRows[0] && dataRows[0].includes("-")) {
+      dataRows = dataRows.slice(1);
     }
 
-    // Extract rows (lines after the header)
-    const rows = lines.slice(1).map((line) => {
+    // Extract rows
+    const rows = dataRows.map((line) => {
       const columns = line.split("|").map((col) => col.trim()).filter(Boolean);
       return columns;
     });
 
-    // Construct the HTML table
-    let tableHtml = `<table class="table-auto border-collapse border border-gray-300 w-full">`;
+    // Construct the HTML table with improved styling and theme-aware colors
+    let tableHtml = `<table class="table-auto border-collapse border border-gray-300 w-full mb-4 text-sm">`;
 
-    // Add table headers
+    // Add table headers with theme-aware styling
     tableHtml += "<thead><tr>";
     headers.forEach((header) => {
-      tableHtml += `<th class="border border-gray-300 p-2 text-left">${header}</th>`;
+      tableHtml += `<th class="border border-gray-300 p-3 text-left ${isDarkMode ? 'bg-[#1e293b] text-white' : 'bg-gray-100 text-gray-800'} font-semibold">${header}</th>`;
     });
     tableHtml += "</tr></thead>";
 
-    // Add table body (rows)
+    // Add table body (rows) with improved styling
     tableHtml += "<tbody>";
-    rows.forEach((row) => {
-      tableHtml += "<tr>";
+    rows.forEach((row, rowIndex) => {
+      tableHtml += `<tr class="${rowIndex % 2 === 0 ? 'bg-opacity-50 bg-gray-50' : ''}">`;
       row.forEach((cell) => {
-        tableHtml += `<td class="border border-gray-300 p-2">${cell}</td>`;
+        // Check if cell contains a number with currency or percentage
+        const isCurrency = /^[£$€¥₹]?\d+([.,]\d+)?$/.test(cell.trim());
+        const isPercentage = /^\d+([.,]\d+)?%$/.test(cell.trim());
+        
+        tableHtml += `<td class="border border-gray-300 p-3 ${isCurrency || isPercentage ? 'text-right' : 'text-left'}">${cell}</td>`;
       });
       tableHtml += "</tr>";
     });
@@ -391,7 +395,7 @@ const deleteConversation = async (id) => {
           {isActiveConversationEmpty ? (
             <div className="flex justify-center items-center h-[90%]">
               <div className="text-center space-y-2">
-                <p className="text-2xl font-bold">Hi, I am SmartTender.</p>
+                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>Hi, I am SmartTender.</p>
                 <p className="text-xl text-gray-400">SmartTender is a solution that streamlines bidding, enhances accuracy, and maximizes efficiency for procurement teams.</p>
               </div>
             </div>
@@ -429,12 +433,12 @@ const deleteConversation = async (id) => {
                             alt="User Avatar"
                             className="w-9 h-9 rounded-full mr-2"
                           />
-                          <span className="text-lg font-bold text-white">
+                          <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>
                             {user?.fullName || user?.username || "User"}
                           </span>
                         </div>
                       </div>
-                      <span className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed whitespace-pre-wrap text-white">
+                      <span className={`p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-relaxed whitespace-pre-wrap ${isDarkMode ? 'text-white' : 'text-black'}`}>
                         {msg.content}
                       </span>
                     </div>
