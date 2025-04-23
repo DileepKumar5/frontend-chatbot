@@ -238,6 +238,10 @@ export default function ChatBox() {
     setLoading(true);
     setQuery("");
   
+    // Use AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // Changed from 120000 to 180000 (3 minutes)
+  
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/query/`,
