@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <AuthHandler /> {/* Include the AuthHandler component */}
           {children}
         </body>

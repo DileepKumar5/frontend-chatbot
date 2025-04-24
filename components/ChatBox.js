@@ -11,6 +11,8 @@ import HeaderControls from "./HeaderControls";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
+// Use the environment variable for API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ChatBox() {
   const [query, setQuery] = useState("");
@@ -31,7 +33,7 @@ export default function ChatBox() {
 
   const fetchFiles = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/fetch-drive-files/`);
+      const response = await axios.get(`${API_URL}/fetch-drive-files/`);
       if (response.data.processed_files) {
         setSyncedFiles(response.data.processed_files);
       }
@@ -120,7 +122,7 @@ export default function ChatBox() {
     if (!user?.id) return;
     try {
       setIsLoadingHistory(true);
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`);
+      const response = await axios.get(`${API_URL}/api/conversations/${user.id}`);
       
       // Create new conversation first
       const newConversation = {
@@ -137,7 +139,12 @@ export default function ChatBox() {
           .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
           .slice(0, 15); // Only load last 15 conversations
         
-        setConversations([newConversation, ...sortedConversations]);
+        // Remove any old 'Error:' bot messages to avoid showing stale errors after refreshing
+        const cleanedConversations = sortedConversations.map(conv => ({
+          ...conv,
+          messages: conv.messages.filter(msg => !(msg.role === 'bot' && msg.content.startsWith('Error:')))
+        }));
+        setConversations([newConversation, ...cleanedConversations]);
       } else {
         setConversations([newConversation]);
       }
@@ -195,7 +202,7 @@ export default function ChatBox() {
       console.log("Sending payload:", payload); // Debug log
   
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}`,
+        `${API_URL}/api/conversations/${user.id}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -208,62 +215,80 @@ export default function ChatBox() {
     }
   };
   
-  // Update the sendMessage function to ensure message structure
+  // Update the sendMessage function to stream SSE from the backend and display clean responses
   const sendMessage = async () => {
     if (!query.trim()) return;
-    
+
+    // Locate active conversation
     const activeConversation = conversations.find((conv) => conv.id === activeConversationId);
     if (!activeConversation) {
       console.error("No active conversation found");
       return;
     }
-  
+
+    // Add user message
     const timestamp = new Date().toISOString();
-    
-    const userMessage = {
-      role: "user",
-      content: query,
-      timestamp: timestamp
-    };
-  
-    // If this is a new conversation, initialize the created_at
-    if (!activeConversation.created_at) {
-      activeConversation.created_at = timestamp;
-    }
+    const userMessage = { role: "user", content: query, timestamp };
+    if (!activeConversation.created_at) activeConversation.created_at = timestamp;
     activeConversation.updated_at = timestamp;
-  
     activeConversation.messages.push(userMessage);
+
+    // Add placeholder bot message to update with streaming content
+    const botMessage = { role: "bot", content: "", timestamp: new Date().toISOString() };
+    activeConversation.messages.push(botMessage);
     setConversations([...conversations]);
-  
+
     setLoading(true);
     setQuery("");
-  
-    // Use AbortController for timeout
+
+    // Stream with SSE
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000); // Changed from 120000 to 180000 (3 minutes)
-  
+    let timeoutId = setTimeout(() => controller.abort(), 180000);
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/query/`,
-        { query },
-        { headers: { "Content-Type": "application/json" } }
-      );
-  
-      const botMessage = {
-        role: "bot",
-        content: response.data.response || "Error: Something went wrong.",
-        timestamp: new Date().toISOString()
-      };
-  
-      activeConversation.messages.push(botMessage);
-      setConversations([...conversations]);
-  
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
+        body: JSON.stringify({ query }),
+        signal: controller.signal
+      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split(/\r?\n\r?\n/);
+          buffer = parts.pop();
+          for (const part of parts) {
+            // Only handle SSE data events and skip any heartbeat/comment events
+            if (!part.startsWith("data:")) continue;
+            const text = part.slice(5).trim();
+            if (!text || text === ":") continue; // skip empty or heartbeat
+            let parsed;
+            try {
+              parsed = JSON.parse(text);
+              // If it's an object with a response field, use that, otherwise use the string directly
+              if (typeof parsed === "object" && parsed.response !== undefined) {
+                botMessage.content = parsed.response;
+              } else {
+                botMessage.content = parsed;
+              }
+            } catch {
+              botMessage.content = text;
+            }
+            setConversations([...conversations]);
+          }
+        }
+        if (done) break;
+      }
       await saveConversationToBackend(activeConversation);
     } catch (error) {
-      console.error("Error fetching response:", error);
+      console.error("Error streaming response:", error);
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
     }
-  
-    setLoading(false);
   };
   
  // Update addNewConversation to include all required fields
@@ -284,7 +309,7 @@ export default function ChatBox() {
 // Delete a conversation
 const deleteConversation = async (id) => {
   try {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/${user.id}/${id}`;
+    const url = `${API_URL}/api/conversations/${user.id}/${id}`;
     console.log("Deleting conversation with URL:", url);
     
     // Delete from backend first
@@ -408,7 +433,7 @@ const deleteConversation = async (id) => {
               .find((conversation) => conversation.id === activeConversationId)
               .messages.map((msg, idx) => (
                 <div key={idx} className="flex mx-20 mt-4">
-                  {msg.role === "bot" && (
+                  {msg.role === "bot" && (msg.content || !loading) && (
                     <div className="flex flex-col items-start pt-3">
                       {/* Bot Name and Avatar */}
                       <div className="flex items-center p-1 rounded-lg">
