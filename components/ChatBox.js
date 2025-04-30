@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { PaperAirplaneIcon, PaperClipIcon } from "@heroicons/react/24/solid";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { ArrowUpIcon, XMarkIcon, CloudArrowUpIcon } from "@heroicons/react/24/solid";
+import { ArrowUpIcon, XMarkIcon, CloudArrowUpIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
 import Sidebar from "./Sidebar"; // Import Sidebar component
@@ -105,7 +105,7 @@ export default function ChatBox() {
         // Check if cell contains a number with currency or percentage
         const isCurrency = /^[£$€¥₹]?\d+([.,]\d+)?$/.test(cell.trim());
         const isPercentage = /^\d+([.,]\d+)?%$/.test(cell.trim());
-        
+
         tableHtml += `<td class="border border-gray-300 p-3 ${isCurrency || isPercentage ? 'text-right' : 'text-left'}">${cell}</td>`;
       });
       tableHtml += "</tr>";
@@ -123,7 +123,7 @@ export default function ChatBox() {
     try {
       setIsLoadingHistory(true);
       const response = await axios.get(`${API_URL}/api/conversations/${user.id}`);
-      
+
       // Create new conversation first
       const newConversation = {
         id: Date.now(),
@@ -138,7 +138,7 @@ export default function ChatBox() {
         const sortedConversations = response.data
           .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
           .slice(0, 15); // Only load last 15 conversations
-        
+
         // Remove any old 'Error:' bot messages to avoid showing stale errors after refreshing
         const cleanedConversations = sortedConversations.map(conv => ({
           ...conv,
@@ -189,7 +189,7 @@ export default function ChatBox() {
         content: msg.content,
         timestamp: msg.timestamp
       }));
-  
+
       const payload = {
         id: conversation.id,  // Make sure this is a number
         user_id: user.id,
@@ -198,9 +198,9 @@ export default function ChatBox() {
         created_at: conversation.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-  
+
       console.log("Sending payload:", payload); // Debug log
-  
+
       await axios.post(
         `${API_URL}/api/conversations/${user.id}`,
         payload,
@@ -214,7 +214,7 @@ export default function ChatBox() {
       }
     }
   };
-  
+
   // Update the sendMessage function to stream SSE from the backend and display clean responses
   const sendMessage = async () => {
     if (!query.trim()) return;
@@ -290,54 +290,54 @@ export default function ChatBox() {
       setLoading(false);
     }
   };
-  
- // Update addNewConversation to include all required fields
- const addNewConversation = () => {
-  const timestamp = new Date().toISOString();
-  const newConversation = {
-    id: Date.now(), // This will be a number
-    messages: [],
-    title: "New Conversation",
-    created_at: timestamp,
-    updated_at: timestamp,
-    user_id: user?.id
+
+  // Update addNewConversation to include all required fields
+  const addNewConversation = () => {
+    const timestamp = new Date().toISOString();
+    const newConversation = {
+      id: Date.now(), // This will be a number
+      messages: [],
+      title: "New Conversation",
+      created_at: timestamp,
+      updated_at: timestamp,
+      user_id: user?.id
+    };
+    setConversations([newConversation, ...conversations]);
+    setActiveConversationId(newConversation.id);
   };
-  setConversations([newConversation, ...conversations]);
-  setActiveConversationId(newConversation.id);
-};
 
-// Delete a conversation
-const deleteConversation = async (id) => {
-  try {
-    const url = `${API_URL}/api/conversations/${user.id}/${id}`;
-    console.log("Deleting conversation with URL:", url);
-    
-    // Delete from backend first
-    const response = await axios.delete(url);
-    console.log("Delete response:", response.data);
-    
-    // Then update local state
-    const newConversations = conversations.filter((conv) => conv.id !== id);
-    setConversations(newConversations);
+  // Delete a conversation
+  const deleteConversation = async (id) => {
+    try {
+      const url = `${API_URL}/api/conversations/${user.id}/${id}`;
+      console.log("Deleting conversation with URL:", url);
 
-    // If the deleted conversation was active, set the first conversation as active
-    if (id === activeConversationId) {
-      setActiveConversationId(newConversations[0]?.id || null);
+      // Delete from backend first
+      const response = await axios.delete(url);
+      console.log("Delete response:", response.data);
+
+      // Then update local state
+      const newConversations = conversations.filter((conv) => conv.id !== id);
+      setConversations(newConversations);
+
+      // If the deleted conversation was active, set the first conversation as active
+      if (id === activeConversationId) {
+        setActiveConversationId(newConversations[0]?.id || null);
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      } else if (error.request) {
+        console.error("Request error:", error.request);
+      } else {
+        console.error("Error message:", error.message);
+      }
     }
-  } catch (error) {
-    console.error("Error deleting conversation:", error);
-    if (error.response) {
-      console.error("Response data:", error.response.data);
-      console.error("Response status:", error.response.status);
-      console.error("Response headers:", error.response.headers);
-    } else if (error.request) {
-      console.error("Request error:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
-  }
-};
- 
+  };
+
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -353,7 +353,7 @@ const deleteConversation = async (id) => {
 
 
 
-  
+
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -371,7 +371,7 @@ const deleteConversation = async (id) => {
 
 
 
- 
+
   //for loading animation
   const [statusIndex, setStatusIndex] = useState(0);
   const statuses = [
@@ -403,7 +403,7 @@ const deleteConversation = async (id) => {
   }
 
   return (
-    <div className={`flex h-screen w-full ${isDarkMode ? 'bg-[#1b1829] text-white' : 'bg-white text-black'} overflow-hidden`}>
+    <div className={`flex h-screen w-full ${isDarkMode ? 'bg-[#100f1d] text-white' : 'bg-white text-black'} overflow-hidden`}>
       {/* Sidebar */}
       <Sidebar
         sidebarOpen={sidebarOpen}
@@ -422,23 +422,70 @@ const deleteConversation = async (id) => {
         <div className={`flex-1 overflow-y-auto p-4 space-y-4 w-full mx-4 custom-scrollbar h-screen scrollbar-right ${isDarkMode ? 'text-white' : 'text-black'}`}>
           {/* Show greeting message if conversation is empty */}
           {isActiveConversationEmpty ? (
-            <div className="flex justify-center items-center h-[90%]">
-              <div className="text-center space-y-2">
-                <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>Hi, I am SmartTender.</p>
-                <p className="text-xl text-gray-400">SmartTender is a solution that streamlines bidding, enhances accuracy, and maximizes efficiency for procurement teams.</p>
+            <div className="flex flex-col justify-center items-center h-[90%]">
+              <video
+                src="/Welcomebot.mp4"
+                alt="Welcome Bot"
+                width={280}
+                height={280}
+                className="mt-0"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+              <h1
+                className={`font-bold mb-2 text-center ${isDarkMode ? 'text-[#37dfb1]' : 'text-black'} text-4xl`}
+              >
+                Welcome to the NexusBot
+              </h1>
+
+              <p className={`text-lg mb-6 text-center max-w-xl ${isDarkMode ? 'text-white' : 'text-black'}`}>
+                AI chatbot for quick answers to procurement and tender queries fast, reliable, and always available.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center mb-4">
+                {[
+                  "What is price of crane?",
+                  "Have we done any project in Reko Diq?",
+                  "What is price of 2 inch pipe?",
+                  "Show me the latest tender status."
+                ].map((example, idx) => (
+                  <button
+                    key={idx}
+                    className={`px-4 py-2 rounded-lg font-medium ${isDarkMode ? 'bg-[#0d3228] text-white hover:bg-[#0f2722]' : 'bg-gray-200 text-black hover:bg-gray-300'} border border-[#37dfb1]`}
+                    onClick={() => setQuery(example)}
+                  >
+                    {example}
+                  </button>
+                ))}
               </div>
             </div>
           ) : (
-            conversations
-              .find((conversation) => conversation.id === activeConversationId)
-              .messages.map((msg, idx) => (
+            (() => {
+              const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId);
+              if (!activeConversation || !activeConversation.messages) {
+                return (
+                  <div className="flex justify-center items-center h-[90%]">
+                    <div className="text-center space-y-2">
+                      <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>No messages found</p>
+                    </div>
+                  </div>
+                );
+              }
+              return activeConversation.messages.map((msg, idx) => (
                 <div key={idx} className="flex mx-20 mt-4">
                   {msg.role === "bot" && (msg.content || !loading) && (
                     <div className="flex flex-col items-start pt-3">
                       {/* Bot Name and Avatar */}
                       <div className="flex items-center p-1 rounded-lg">
                         <div className="flex items-center mb-1 p-1 rounded-lg mx-2">
-                          <img src="/SmartTender.png" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
+                          <img
+                            src="/SmartTender.png"
+                            alt="Bot_Avatar"
+                            width={36}
+                            height={36}
+                            className="rounded-full mr-2"
+                          />
                           <span className="text-lg font-bold">SmartTender</span>
                         </div>
                       </div>
@@ -448,9 +495,6 @@ const deleteConversation = async (id) => {
                         className="p-1 rounded-lg w-full break-words inline-block ml-7 text-xl leading-tight whitespace-pre-line"
                         dangerouslySetInnerHTML={{ __html: cleanBotResponse(msg.content) }}
                       ></span>
-
-
-
                     </div>
                   )}
                   {msg.role === "user" && mounted && (
@@ -460,7 +504,9 @@ const deleteConversation = async (id) => {
                           <img
                             src={user?.imageUrl || "/gasco.jpeg"}
                             alt="User Avatar"
-                            className="w-9 h-9 rounded-full mr-2"
+                            width={36}
+                            height={36}
+                            className="rounded-full mr-2"
                           />
                           <span className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>
                             {user?.fullName || user?.username || "User"}
@@ -472,12 +518,9 @@ const deleteConversation = async (id) => {
                       </span>
                     </div>
                   )}
-
-
-
                 </div>
-
-              ))
+              ));
+            })()
           )}
           {loading && (
             <span>
@@ -485,7 +528,13 @@ const deleteConversation = async (id) => {
                 {/* Bot Name and Avatar */}
                 <div className="flex items-center p-1 rounded-lg">
                   <div className="flex items-center mb-1 p-1 rounded-lg mx-2">
-                    <img src="/SmartTender.png" alt="Bot_Avatar" className="w-9 h-9 rounded-full mr-2" />
+                    <img
+                      src="/SmartTender.png"
+                      alt="Bot_Avatar"
+                      width={36}
+                      height={36}
+                      className="rounded-full mr-2"
+                    />
                     <span className="text-lg font-bold">SmartTender</span>
                   </div>
                 </div>
@@ -523,9 +572,14 @@ const deleteConversation = async (id) => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className={`flex items-center p-2 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} w-full max-w-4xl ml-4 pr-4`}>
-          <label className={`cursor-pointer text-gray-400 ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>
-            <PaperClipIcon className="h-6 w-6 mx-2" />
+        <div className={`flex items-center p-2 w-full max-w-4xl ml-4 pr-4 bg-transparent`}>
+          {/* Paperclip Icon Button */}
+          <button
+            className="flex items-center justify-center h-10 w-10 border border-[#37dfb1] rounded-lg bg-transparent mr-2"
+            type="button"
+            tabIndex={-1}
+          >
+            <PaperClipIcon className="h-6 w-6 text-[#37dfb1]" />
             <input
               type="file"
               accept=".pdf,.docx,.xlsx,.csv"
@@ -533,17 +587,30 @@ const deleteConversation = async (id) => {
               multiple
               onChange={handleFileUpload}
             />
-          </label>
+          </button>
+          {/* Input */}
           <input
             type="text"
-            className={`flex-grow p-2 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-black'} border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} rounded-lg focus:outline-none mx-4`}
-            placeholder="Type a message..."
+            className="flex-grow p-2 bg-[#d9d9d9] text-white border border-[#37dfb1] rounded-lg focus:outline-none mx-2"
+            placeholder="Ask me anything..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
+            style={{ background: isDarkMode ? '#d9d9d9' : '#e5e7eb', color: isDarkMode ? 'black' : '#000' }}
           />
-          <button onClick={sendMessage} className={`${isDarkMode ? 'bg-[#f1f144]' : 'bg-yellow-400'} text-white p-2 rounded-lg`}>
-            <ArrowUpIcon className="h-6 w-6 text-black" />
+          {/* Send Button */}
+          <button
+            onClick={sendMessage}
+            className="flex items-center justify-center h-10 w-10 border border-[#37dfb1] rounded-lg bg-[#101c1d] ml-2 p-1"
+            type="button"
+          >
+            <img
+              src="/Final (19).png" // or .svg, or whatever your file is
+              alt="Send"
+              width={28} // adjust as needed
+              height={28}
+              className="object-contain"
+            />
           </button>
         </div>
       </div>

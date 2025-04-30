@@ -45,18 +45,33 @@ export default function Sidebar({
   };
 
   return (
-    <div className={`transition-all duration-300 ${isDarkMode ? 'bg-[#100f1d]' : 'bg-[#100f1d]'} px-4 ${sidebarOpen ? "w-80" : "w-20"} overflow-hidden relative h-screen`}>
+    <div
+      className={`transition-all duration-300 ${isDarkMode ? 'bg-[#100f1d]' : 'bg-[#100f1d]'} px-4 ${sidebarOpen ? "w-80" : "w-20"} overflow-hidden relative h-screen`}
+      style={{ borderRight: '0.1px solid #37dfb1' }}
+    >
       
       {/* Logo Section */}
-      <div className="flex flex-col items-center mt-4">
-        <img src="/smarttype.png" alt="Logo" className="w-40 h-auto" />
+      <div className="flex items-center justify-center mt-4 mb-2 w-full">
+        {/* <img src="/sidebarlogo.png" alt="Logo" className="w-48 h-12" /> */}
+
+        <video
+                src="/sidebarlogo.mp4"
+                alt="Welcome Bot"
+                width={192}
+                height={48}
+                className="mt-0"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
       </div>
 
       {/* New Chat Button */}
       {sidebarOpen && (
         <button
           onClick={addNewConversation}
-          className={`w-full ${isDarkMode ? 'bg-[#2d3748] hover:bg-[#4a5568]' : 'bg-[#2d3748] hover:bg-[#4a5568]'} p-3 rounded-lg text-white font-semibold transition mt-6`}
+          className={`w-full ${isDarkMode ? 'bg-[#1a3937] hover:bg-[#1a3937]' : 'bg-[#0f2722] hover:bg-[#1a3937]'} p-3 rounded-lg text-white font-semibold transition mt-6 border border-[#37dfb1]`}
         >
           + New Chat
         </button>
@@ -64,13 +79,13 @@ export default function Sidebar({
 
       {/* Dynamic Chat List */}
       {sidebarOpen && (
-        <div className="mt-3 space-y-2">
-          <h2 className={`${isDarkMode ? 'text-gray-400' : 'text-gray-400'} text-sm`}>Recent Chats</h2>
+        <div className="mt-6 space-y-2">
+          <h2 className="text-white text-center font-bold text-sm mt-4">Recent Chats</h2>
           {conversations.length > 0 ? (
             conversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`cursor-pointer ${isDarkMode ? 'bg-[#23232b]' : 'bg-[#23232b]'} p-2 rounded-lg flex justify-between items-center ${conversation.id === activeConversationId ? `${isDarkMode ? 'border-[#977dff]' : ''}` : `hover:${isDarkMode ? 'bg-[#2e2e38]' : 'bg-gray-300'}`}`}
+                className={`cursor-pointer ${isDarkMode ? 'bg-[#0f2722]' : 'bg-[#0f2722]'} p-2 rounded-lg flex justify-between items-center border border-[#37dfb1] ${conversation.id === activeConversationId ? `${isDarkMode ? 'border border-[#1a3937]' : 'border border-[#1a3937]'}` : `hover:${isDarkMode ? 'bg-[#1a3937]' : 'bg-[#1a3937]'}`}`}
                 onClick={() => setActiveConversationId(conversation.id)}
               >
                 <span className={`${isDarkMode ? 'text-white' : 'text-white'} truncate w-3/4`}>
@@ -105,7 +120,8 @@ export default function Sidebar({
             <img 
               src={user.imageUrl} 
               alt="User Profile" 
-              className="w-12 h-12 rounded-full" 
+              className="w-12 h-12 rounded-full border-2"
+              style={{ borderColor: '#00bf63' }}
             />
             <span className={`${isDarkMode ? 'text-white' : 'text-white'} text-lg truncate`}>
               {user.fullName || user.username || "User"}

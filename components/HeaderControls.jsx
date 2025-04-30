@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, Check, LogOut } from "lucide-react";
+import { Check, LogOut } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { IoIosArrowDropdown } from "react-icons/io";
+
 
 const HeaderControls = ({ isDarkMode, toggleTheme }) => {
   const { signOut } = useClerk();
@@ -48,12 +50,12 @@ const HeaderControls = ({ isDarkMode, toggleTheme }) => {
       <div className="flex space-x-4 items-center">
         <div
           className={`${
-            isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-purple-950"
+            isDarkMode ? "bg-[#0a1b17] text-white" : "bg-gray-100 text-purple-950"
           } px-4 py-2 rounded-lg text-sm cursor-pointer 
           hover:${isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"} 
-          flex items-center justify-between gap-2`}
+          flex items-center justify-between gap-2 border border-[#37dfb1]`}
         >
-          Controls <ChevronDown size={16} />
+          Controls <IoIosArrowDropdown size={16} />
         </div>
 
         {/* Model Selection Dropdown */}
@@ -61,13 +63,15 @@ const HeaderControls = ({ isDarkMode, toggleTheme }) => {
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className={`${
-              isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-purple-950"
-            } w-36 px-4 py-2 rounded-lg text-sm cursor-pointer text-center 
+              isDarkMode ? "bg-[#0a1b17]" : "bg-gray-100 text-purple-950"
+            } px-4 py-2 rounded-lg text-sm cursor-pointer text-center 
             hover:${isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"} 
-            flex items-center justify-between relative`}
+            flex items-center justify-between relative border border-[#37dfb1] `}
           >
-            <span className="flex-1 text-center">{selectedModel.name}</span>
-            <ChevronDown size={16} className="ml-2" />
+            <span className="flex items-center gap-1">
+              {selectedModel.name}
+              <IoIosArrowDropdown size={16}/>
+            </span>
           </button>
 
           {menuOpen && (
@@ -102,9 +106,9 @@ const HeaderControls = ({ isDarkMode, toggleTheme }) => {
         <div className="relative group">
           <div
             className={`${
-              isDarkMode ? "bg-[#23232b] text-white" : "bg-gray-100 text-purple-950"
+              isDarkMode ? "bg-[#0a1b17] text-white" : "bg-gray-100 text-purple-950"
             } px-4 py-2 rounded-lg text-sm cursor-pointer 
-            hover:${isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"}`}
+            hover:${isDarkMode ? "bg-[#2e2e38]" : "bg-gray-300"} border border-[#37dfb1]`}
           >
             RAG ⓘ
           </div>
