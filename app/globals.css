@@ -1,9 +1,14 @@
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/700.css";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  @apply bg-gray-100 text-gray-900;
+  @apply bg-gray-100 text-gray-900 font-sans;
+  font-family: 'Poppins', sans-serif !important;
 }
 
 /* Custom Scrollbar Styles */
