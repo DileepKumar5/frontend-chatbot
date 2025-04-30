@@ -419,7 +419,7 @@ export default function ChatBox() {
         {/* Header */}
         <HeaderControls isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
 
-        <div className={`flex-1 overflow-y-auto pl-4 pr-0 space-y-4 w-full custom-scrollbar h-screen scrollbar-right ${isDarkMode ? 'text-white' : 'text-black'}`}>
+        <div className={`flex-1  overflow-x-hidden pl-4 pr-0 space-y-4 w-full custom-scrollbar scrollbar-none h-screen scrollbar-right ${isDarkMode ? 'text-white' : 'text-black'}`}>
           {/* Show greeting message if conversation is empty */}
           {isActiveConversationEmpty ? (
             <div className="flex flex-col justify-center items-center h-[90%]">
@@ -509,7 +509,7 @@ export default function ChatBox() {
           )}
           {loading && (
             <span>
-              <div className="flex  mx-0 mt-4 flex-col items-start pt-3">
+              <div className="flex mx-0 mt-4 flex-col items-start pt-3 overflow-x-hidden overflow-y-hidden w-full">
                 {/* Bot Name and Avatar */}
                 <div className="flex items-center p-1 rounded-lg">
                   <div className="flex items-center mb-1 p-1 rounded-lg mx-0">
