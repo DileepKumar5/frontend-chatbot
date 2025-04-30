@@ -484,14 +484,14 @@ export default function ChatBox() {
                         className="rounded-full mr-0"
                       />
                       <span
-                        className="px-0 py-2 rounded-lg break-words text-sm leading-tight whitespace-pre-line text-left w-[80%] ml-2 font-poppins"
+                        className="px-0 py-2 rounded-lg break-words text-lg leading-tight whitespace-pre-line text-left w-[80%] ml-2 font-poppins"
                         dangerouslySetInnerHTML={{ __html: cleanBotResponse(msg.content) }}
                       ></span>
                     </div>
                   )}
                   {msg.role === "user" && mounted && (
                     <div className="flex items-start justify-end w-full mr-16">
-                      <span className="px-2 py-2 rounded-lg break-words text-sm leading-relaxed whitespace-pre-wrap text-white text-right w-auto max-w-[50%] mr-2 border border-[#37dfb1] bg-[#101c1d] font-poppins">
+                      <span className="px-2 py-2 rounded-lg break-words text-lg leading-relaxed whitespace-pre-wrap text-white text-right w-auto max-w-[50%] mr-2 border border-[#37dfb1] bg-[#101c1d] font-poppins">
                         {msg.content}
                       </span>
                       <img
@@ -509,18 +509,18 @@ export default function ChatBox() {
           )}
           {loading && (
             <span>
-              <div className="flex  mx-20 mt-4 flex-col items-start pt-3">
+              <div className="flex  mx-0 mt-4 flex-col items-start pt-3">
                 {/* Bot Name and Avatar */}
                 <div className="flex items-center p-1 rounded-lg">
-                  <div className="flex items-center mb-1 p-1 rounded-lg mx-2">
-                    <img
-                      src="/SmartTender.png"
-                      alt="Bot_Avatar"
-                      width={36}
-                      height={36}
-                      className="rounded-full mr-2"
-                    />
-                    <span className="text-lg font-bold">SmartTender</span>
+                  <div className="flex items-center mb-1 p-1 rounded-lg mx-0">
+                  <img
+                        src="/Welcomebot.png"
+                        alt="Bot_Avatar"
+                        width={72}
+                        height={72}
+                        className="rounded-full mr-0"
+                      />
+                    <span className="text-lg text-gray-500">NexusBot is generating response...</span>
                   </div>
                 </div>
 
