@@ -59,11 +59,11 @@ export default function ChatBox() {
       .replace(/(\*\*|__)(.*?)\1/g, '$2')  // Remove bold (**text**)
       .replace(/(\*|_)(.*?)\1/g, '$2')    // Remove italics (*text* or _text_)
       .replace(/(#{3,6})\s*(.*)/g, '$2')   // Remove headers (### text, #### text, ###### text)
-      .replace(/~~(.*?)~~/g, '$1');        // Remove strikethrough (~~text~~)
-    // content = content
-    // .replace(/(\d+[\.)]\s+)/g, '<br />$1') // Add <br /> before numbers followed by a period or parenthesis (e.g., 1. or 2))
+      .replace(/~~(.*?)~~/g, '$1')         // Remove strikethrough (~~text~~)
+      .replace(/<\/table>\s*<br>\s*/g, '</table>') // Remove space after the table
+      .replace(/<\/table>\s+/g, '</table>'); // Remove any whitespace after the table
 
-    return content;
+    return content.trim(); // Trim any leading or trailing whitespace
   };
 
 
@@ -424,7 +424,7 @@ export default function ChatBox() {
           {isActiveConversationEmpty ? (
             <div className="flex flex-col justify-center items-center h-[90%]">
               <video
-                src="/Welcomebot.mp4"
+                src={isDarkMode ? "/Welcomebot.mp4" : "/Welcomebotlight.mp4"}
                 alt="Welcome Bot"
                 width={280}
                 height={280}
@@ -452,7 +452,7 @@ export default function ChatBox() {
                 ].map((example, idx) => (
                   <button
                     key={idx}
-                    className={`px-4 py-2 rounded-lg font-medium ${isDarkMode ? 'bg-[#0d3228] text-white hover:bg-[#0f2722]' : 'bg-gray-200 text-black hover:bg-gray-300'} border border-[#37dfb1]`}
+                    className={`px-4 py-2 rounded-lg font-medium ${isDarkMode ? 'bg-[#0d3228] text-white hover:bg-[#0f2722]' : 'bg-[#165DFF] bg-opacity-20 text-black hover:bg-[#A8E6CF] hover:bg-opacity-80'} border border-[#37dfb1]`}
                     onClick={() => setQuery(example)}
                   >
                     {example}
@@ -491,7 +491,7 @@ export default function ChatBox() {
                   )}
                   {msg.role === "user" && mounted && (
                     <div className="flex items-start justify-end w-full mr-16">
-                      <span className="px-2 py-2 rounded-lg break-words text-lg leading-relaxed whitespace-pre-wrap text-white text-right w-auto max-w-[50%] mr-2 border border-[#37dfb1] bg-[#101c1d] font-poppins">
+                      <span   className={`px-2 py-2 rounded-lg break-words text-lg leading-relaxed whitespace-pre-wrap text-right w-auto max-w-[50%] mr-2 font-poppins ${isDarkMode ? 'bg-[#101c1d] border-[#37dfb1] text-white' : 'bg-[#e0e9de] border-[#4b4b4b] text-black'}`}>
                         {msg.content}
                       </span>
                       <img
@@ -513,13 +513,13 @@ export default function ChatBox() {
                 {/* Bot Name and Avatar */}
                 <div className="flex items-center p-1 rounded-lg">
                   <div className="flex items-center mb-1 p-1 rounded-lg mx-0">
-                  <img
-                        src="/Welcomebot.png"
-                        alt="Bot_Avatar"
-                        width={72}
-                        height={72}
-                        className="rounded-full mr-0"
-                      />
+                    <img
+                      src="/Welcomebot.png"
+                      alt="Bot_Avatar"
+                      width={72}
+                      height={72}
+                      className="rounded-full mr-0"
+                    />
                     <span className="text-lg text-gray-500">NexusBot is generating response...</span>
                   </div>
                 </div>
@@ -560,11 +560,12 @@ export default function ChatBox() {
         <div className={`flex items-center p-2 w-full max-w-4xl ml-4 pr-4 bg-transparent`}>
           {/* Paperclip Icon Button */}
           <button
-            className="flex items-center justify-center h-10 w-10 border border-[#37dfb1] rounded-lg bg-transparent mr-2"
+            className={`flex items-center justify-center h-10 w-10 border rounded-lg bg-transparent mr-2 ${isDarkMode ? 'border-[#37dfb1]' : 'border-[#2E8B57]'}`}
             type="button"
             tabIndex={-1}
           >
-            <PaperClipIcon className="h-6 w-6 text-[#37dfb1]" />
+            <PaperClipIcon className={`h-6 w-6 ${isDarkMode ? 'text-[#37dfb1]' : 'text-[#2E8B57]'}`} />
+
             <input
               type="file"
               accept=".pdf,.docx,.xlsx,.csv"
@@ -576,13 +577,14 @@ export default function ChatBox() {
           {/* Input */}
           <input
             type="text"
-            className="flex-grow p-2 bg-[#d9d9d9] text-white border border-[#37dfb1] rounded-lg focus:outline-none mx-2"
+            className={`flex-grow p-2 border rounded-lg focus:outline-none mx-2 ${isDarkMode ? 'bg-[#d9d9d9] border-[#37dfb1]' : 'bg-[#2f2f2f] border-[#2E8B57]'}`}
             placeholder="Ask me anything..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
             style={{ background: isDarkMode ? '#d9d9d9' : '#e5e7eb', color: isDarkMode ? 'black' : '#000' }}
           />
+
           {/* Send Button */}
           <button
             onClick={sendMessage}
